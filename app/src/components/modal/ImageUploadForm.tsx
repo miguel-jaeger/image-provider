@@ -1,4 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react'
+import axios from 'axios'
 
 interface ImageUploadFormProps {
   onSubmit: (image: {
@@ -13,36 +14,66 @@ interface ImageUploadFormProps {
 
 const categories = ['Nature', 'Technology', 'Architecture', 'People', 'Abstract']
 
+const CLOUD_NAME = 'dhecags26'
+const UPLOAD_PRESET = 'Imagenes'
+
 export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      setFile(selectedFile)
+      setPreview(URL.createObjectURL(selectedFile))
+      setStatus('idle')
+      setErrorMsg('')
     }
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!title || !category) return
+    if (!file || !title || !category) return
 
-    onSubmit({
-      title,
-      description,
-      category,
-      url: preview || 'https://via.placeholder.com/400x300',
-      cdnLink: `cdn.imageprovider.com/custom/${title.toLowerCase().replace(/\s+/g, '_')}`
-    })
+    setStatus('uploading')
+    setErrorMsg('')
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', UPLOAD_PRESET)
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        formData
+      )
+
+      if (response.data && response.data.secure_url) {
+        onSubmit({
+          title,
+          description,
+          category,
+          url: response.data.secure_url,
+          cdnLink: response.data.secure_url
+        })
+      } else {
+        setStatus('error')
+        setErrorMsg('No se recibió URL de Cloudinary.')
+      }
+    } catch (error) {
+      console.error('Error al subir a Cloudinary:', error)
+      setStatus('error')
+      setErrorMsg('Error al subir la imagen. Verifica tu conexión y configuración de Cloudinary.')
+    }
   }
+
+  const isSubmitDisabled = !file || !title || !category || status === 'uploading'
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
@@ -131,6 +162,13 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
             rows={4}
           />
         </div>
+
+        {/* Error message */}
+        {status === 'error' && (
+          <div className="p-md bg-error-container text-on-error-container rounded-lg text-body-sm">
+            {errorMsg}
+          </div>
+        )}
       </div>
 
       {/* Modal Footer */}
@@ -138,15 +176,24 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-lg py-sm rounded-lg text-on-surface font-label-md hover:bg-surface-container-high transition-all active:scale-95"
+          disabled={status === 'uploading'}
+          className="px-lg py-sm rounded-lg text-on-surface font-label-md hover:bg-surface-container-high transition-all active:scale-95 disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+          disabled={isSubmitDisabled}
+          className="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-xs"
         >
-          Save Image
+          {status === 'uploading' ? (
+            <>
+              <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+              Uploading...
+            </>
+          ) : (
+            'Save Image'
+          )}
         </button>
       </div>
     </form>
