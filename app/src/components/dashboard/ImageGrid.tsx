@@ -14,7 +14,7 @@ export function ImageGrid({ images, onDelete, onAddNew }: ImageGridProps) {
       {images.map((image) => (
         <ImageCard key={image.id} image={image} onDelete={onDelete} />
       ))}
-      <AddNewAssetCard onClick={onAddNew} />
+     
     </div>
   )
 }
