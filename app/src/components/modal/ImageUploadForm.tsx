@@ -48,6 +48,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', UPLOAD_PRESET)
+    formData.append('folder', 'image-provider')
 
     try {
       const response = await axios.post(
