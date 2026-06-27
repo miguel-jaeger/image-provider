@@ -3,8 +3,6 @@ import type { Database } from 'sql.js'
 import type { Image } from '../types/image'
 
 const DB_KEY = 'image-provider-sqlite'
-const CLOUD_NAME = 'dhecags26'
-const UPLOAD_PRESET = 'Imagenes'
 
 let dbInstance: Database | null = null
 
@@ -172,23 +170,7 @@ export async function deleteImage(db: Database, id: number): Promise<boolean> {
   saveToStorage(db)
 
   if (publicId) {
-    try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/delete_by_token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          public_id: publicId,
-          upload_preset: UPLOAD_PRESET
-        })
-      })
-
-      const data = await res.json()
-      if (data.result !== 'ok') {
-        console.warn('Cloudinary delete response:', data)
-      }
-    } catch (err) {
-      console.warn('Could not delete from Cloudinary:', err)
-    }
+    console.warn(`Cloudinary image not deleted. Manual deletion needed for public_id: ${publicId}`)
   }
 
   return true
