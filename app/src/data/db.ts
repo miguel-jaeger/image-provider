@@ -47,95 +47,133 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
   }
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowsToImages(results: { columns: string[]; values: any[][] }): Image[] {
+  return results.values.map((row) => ({
+    id: row[0] as number,
+    title: row[1] as string,
+    description: row[2] as string,
+    category: row[3] as string,
+    url: row[4] as string,
+    cdnLink: row[5] as string,
+    createdAt: row[6] as string
+  }))
+}
+
 export async function initDatabase(): Promise<Database> {
   if (db) return db
 
-  const SQL = await initSqlJs({
-    locateFile: (file) => `https://sql.js.org/dist/${file}`
-  })
+  try {
+    const SQL = await initSqlJs({
+      locateFile: (file) => `https://sql.js.org/dist/${file}`
+    })
 
-  const savedData = localStorage.getItem('image-provider-db')
-  if (savedData) {
-    const buf = new Uint8Array(JSON.parse(savedData))
-    db = new SQL.Database(buf)
-  } else {
-    db = new SQL.Database()
-    db.run(`
-      CREATE TABLE IF NOT EXISTS images (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT,
-        category TEXT NOT NULL,
-        url TEXT NOT NULL,
-        cdnLink TEXT,
-        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
-    for (const item of SEED_DATA) {
-      db.run(
-        'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-        [item.title, item.description, item.category, item.url, item.cdnLink, item.createdAt]
-      )
+    const savedData = localStorage.getItem('image-provider-db')
+    if (savedData) {
+      const buf = new Uint8Array(JSON.parse(savedData))
+      db = new SQL.Database(buf)
+    } else {
+      db = new SQL.Database()
+      db.run(`
+        CREATE TABLE IF NOT EXISTS images (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          description TEXT,
+          category TEXT NOT NULL,
+          url TEXT NOT NULL,
+          cdnLink TEXT,
+          createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      for (const item of SEED_DATA) {
+        db.run(
+          'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+          [item.title, item.description, item.category, item.url, item.cdnLink, item.createdAt]
+        )
+      }
+      saveDatabase()
     }
-    saveDatabase()
+  } catch (error) {
+    console.error('Failed to initialize database:', error)
+    db = null
   }
 
-  return db
+  return db!
 }
 
 function saveDatabase() {
   if (!db) return
-  const data = db.export()
-  const arr = Array.from(data)
-  localStorage.setItem('image-provider-db', JSON.stringify(arr))
+  try {
+    const data = db.export()
+    const arr = Array.from(data)
+    localStorage.setItem('image-provider-db', JSON.stringify(arr))
+  } catch (error) {
+    console.error('Failed to save database:', error)
+  }
 }
 
 export function getAllImages(): Image[] {
   if (!db) return []
-  const results = db.exec('SELECT * FROM images ORDER BY id DESC')
-  if (results.length === 0) return []
-  const { values } = results[0]
-  return values.map((row) => ({
-    id: row[0] as number,
-    title: row[1] as string,
-    description: row[2] as string,
-    category: row[3] as string,
-    url: row[4] as string,
-    cdnLink: row[5] as string,
-    createdAt: row[6] as string
-  }))
+  try {
+    const results = db.exec('SELECT * FROM images ORDER BY id DESC')
+    if (results.length === 0) return []
+    return rowsToImages(results[0])
+  } catch (error) {
+    console.error('Failed to get images:', error)
+    return []
+  }
 }
 
 export function getImagesByCategory(category: string): Image[] {
   if (!db) return []
-  const results = db.exec('SELECT * FROM images WHERE category = ? ORDER BY id DESC', [category])
-  if (results.length === 0) return []
-  const { values } = results[0]
-  return values.map((row) => ({
-    id: row[0] as number,
-    title: row[1] as string,
-    description: row[2] as string,
-    category: row[3] as string,
-    url: row[4] as string,
-    cdnLink: row[5] as string,
-    createdAt: row[6] as string
-  }))
+  try {
+    const stmt = db.prepare('SELECT * FROM images WHERE category = ? ORDER BY id DESC')
+    stmt.bind([category])
+    const results: Image[] = []
+    while (stmt.step()) {
+      const row = stmt.getAsObject()
+      results.push({
+        id: row.id as number,
+        title: row.title as string,
+        description: row.description as string,
+        category: row.category as string,
+        url: row.url as string,
+        cdnLink: row.cdnLink as string,
+        createdAt: row.createdAt as string
+      })
+    }
+    stmt.free()
+    return results
+  } catch (error) {
+    console.error('Failed to get images by category:', error)
+    return []
+  }
 }
 
 export function addImage(image: Omit<Image, 'id'>): number {
   if (!db) return 0
-  db.run(
-    'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-    [image.title, image.description, image.category, image.url, image.cdnLink, image.createdAt]
-  )
-  saveDatabase()
-  const result = db.exec('SELECT last_insert_rowid()')
-  return result[0]?.values[0][0] as number
+  try {
+    db.run(
+      'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+      [image.title, image.description, image.category, image.url, image.cdnLink, image.createdAt]
+    )
+    saveDatabase()
+    const result = db.exec('SELECT last_insert_rowid()')
+    return result[0]?.values[0][0] as number
+  } catch (error) {
+    console.error('Failed to add image:', error)
+    return 0
+  }
 }
 
 export function deleteImage(id: number): boolean {
   if (!db) return false
-  db.run('DELETE FROM images WHERE id = ?', [id])
-  saveDatabase()
-  return true
+  try {
+    db.run('DELETE FROM images WHERE id = ?', [id])
+    saveDatabase()
+    return true
+  } catch (error) {
+    console.error('Failed to delete image:', error)
+    return false
+  }
 }
