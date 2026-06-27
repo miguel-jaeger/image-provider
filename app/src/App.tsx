@@ -44,6 +44,7 @@ function Dashboard() {
     category: string
     url: string
     cdnLink: string
+    publicId: string
   }) => {
     const db = dbRef.current
     if (!db) return
@@ -52,10 +53,10 @@ function Dashboard() {
     setIsModalOpen(false)
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const db = dbRef.current
     if (!db) return
-    deleteImage(db, id)
+    await deleteImage(db, id)
     setImages(activeCategory === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
   }
 

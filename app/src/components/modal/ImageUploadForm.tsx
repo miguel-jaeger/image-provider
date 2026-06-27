@@ -8,6 +8,7 @@ interface ImageUploadFormProps {
     category: string
     url: string
     cdnLink: string
+    publicId: string
   }) => void
   onCancel: () => void
 }
@@ -60,7 +61,8 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
           description,
           category,
           url: response.data.secure_url,
-          cdnLink: response.data.secure_url
+          cdnLink: response.data.secure_url,
+          publicId: response.data.public_id || ''
         })
       } else {
         setStatus('error')

@@ -5,5 +5,6 @@ export interface Image {
   category: string
   url: string
   cdnLink: string
+  publicId: string
   createdAt: string
 }

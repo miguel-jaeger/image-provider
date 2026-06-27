@@ -21,6 +21,9 @@ export function ImageCard({ image, onDelete }: ImageCardProps) {
         </div>
       </div>
       <div className="p-md flex flex-col gap-sm">
+        <h3 className="font-title-lg text-on-surface truncate">
+          {image.title}
+        </h3>
         <p className="font-body-sm text-on-surface-variant line-clamp-2">
           {image.description}
         </p>
