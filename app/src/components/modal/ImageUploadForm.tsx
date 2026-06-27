@@ -16,7 +16,7 @@ interface ImageUploadFormProps {
 const categories = ['Nature', 'Technology', 'Architecture', 'People', 'Abstract']
 
 const CLOUD_NAME = 'dhecags26'
-const UPLOAD_PRESET = 'Imagenes'
+const UPLOAD_PRESET = 'preset_react'
 
 export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
   const [title, setTitle] = useState('')
