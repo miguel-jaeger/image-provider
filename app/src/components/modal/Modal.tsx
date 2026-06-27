@@ -28,7 +28,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         onClick={onClose}
       />
       <div className="relative w-full max-w-xl bg-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 flex flex-col max-h-[90vh]">
-        <div className="px-xl py-lg border-b border-outline-variant/20 flex justify-between items-center">
+        <div className="px-xl py-lg border-b border-outline-variant/20 flex justify-between items-center shrink-0">
           <h2 className="font-headline-md text-headline-md text-on-surface">
             {title}
           </h2>
@@ -39,7 +39,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        {children}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   )
