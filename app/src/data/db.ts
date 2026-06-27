@@ -1,10 +1,13 @@
+import initSqlJs from 'sql.js'
+import type { Database } from 'sql.js'
 import type { Image } from '../types/image'
 
-const STORAGE_KEY = 'image-provider-images'
+const DB_KEY = 'image-provider-sqlite'
 
-const SEED_DATA: Image[] = [
+let dbInstance: Database | null = null
+
+const SEED_DATA: Omit<Image, 'id'>[] = [
   {
-    id: 1,
     title: 'Harbor Horizon',
     description: 'Ultra-modern minimalist office space featuring sustainable materials and ergonomic design elements for creative teams.',
     category: 'Architecture',
@@ -13,7 +16,6 @@ const SEED_DATA: Image[] = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 2,
     title: 'Summit Blue',
     description: 'Panoramic mountain range view captured at sunrise with atmospheric depth and natural color grading.',
     category: 'Nature',
@@ -22,7 +24,6 @@ const SEED_DATA: Image[] = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 3,
     title: 'Core Processing',
     description: 'Macro shot of a next-generation semiconductor with integrated neural processing units and light-pathways.',
     category: 'Technology',
@@ -31,7 +32,6 @@ const SEED_DATA: Image[] = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 4,
     title: 'Team Sync',
     description: 'Collaborative team workshop session in a modern daylight studio setting, highlighting creative synergy.',
     category: 'People',
@@ -40,7 +40,6 @@ const SEED_DATA: Image[] = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 5,
     title: 'Fluid Flow',
     description: 'Generative 3D fluid art representing dynamic data streams and algorithmic fluidity for digital interfaces.',
     category: 'Abstract',
@@ -50,45 +49,103 @@ const SEED_DATA: Image[] = [
   }
 ]
 
-function loadImages(): Image[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+function createTable(db: Database) {
+  db.run(`CREATE TABLE IF NOT EXISTS images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT NOT NULL,
+    url TEXT NOT NULL,
+    cdnLink TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  )`)
+}
+
+function seedData(db: Database) {
+  const count = db.exec('SELECT COUNT(*) as cnt FROM images')
+  if (count[0].values[0][0] === 0) {
+    const stmt = db.prepare(
+      'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)'
+    )
+    for (const item of SEED_DATA) {
+      stmt.run([item.title, item.description, item.category, item.url, item.cdnLink, item.createdAt])
     }
-  } catch { /* ignore */ }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DATA))
-  return SEED_DATA
+    stmt.free()
+  }
 }
 
-function saveImages(images: Image[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(images))
+function saveToStorage(db: Database) {
+  const data = db.export()
+  localStorage.setItem(DB_KEY, JSON.stringify(Array.from(data)))
 }
 
-export function getAllImages(): Image[] {
-  return loadImages().sort((a, b) => b.id - a.id)
+export async function initDatabase(): Promise<Database> {
+  if (dbInstance) return dbInstance
+
+  const SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' })
+
+  const stored = localStorage.getItem(DB_KEY)
+  if (stored) {
+    const arr = new Uint8Array(JSON.parse(stored))
+    dbInstance = new SQL.Database(arr)
+  } else {
+    dbInstance = new SQL.Database()
+    createTable(dbInstance)
+    seedData(dbInstance)
+    saveToStorage(dbInstance)
+  }
+
+  return dbInstance
 }
 
-export function getImagesByCategory(category: string): Image[] {
-  return loadImages()
-    .filter((img) => img.category === category)
-    .sort((a, b) => b.id - a.id)
+export function getAllImages(db: Database): Image[] {
+  const results = db.exec('SELECT * FROM images ORDER BY id DESC')
+  if (results.length === 0) return []
+  return results[0].values.map((row) => ({
+    id: row[0] as number,
+    title: row[1] as string,
+    description: row[2] as string,
+    category: row[3] as string,
+    url: row[4] as string,
+    cdnLink: row[5] as string,
+    createdAt: row[6] as string
+  }))
 }
 
-export function addImage(image: Omit<Image, 'id'>): Image {
-  const images = loadImages()
-  const newId = images.length > 0 ? Math.max(...images.map((i) => i.id)) + 1 : 1
-  const newImage: Image = { ...image, id: newId }
-  images.push(newImage)
-  saveImages(images)
-  return newImage
+export function getImagesByCategory(db: Database, category: string): Image[] {
+  const stmt = db.prepare('SELECT * FROM images WHERE category = ? ORDER BY id DESC')
+  stmt.bind([category])
+  const results: Image[] = []
+  while (stmt.step()) {
+    const row = stmt.getAsObject()
+    results.push({
+      id: row.id as number,
+      title: row.title as string,
+      description: row.description as string,
+      category: row.category as string,
+      url: row.url as string,
+      cdnLink: row.cdnLink as string,
+      createdAt: row.createdAt as string
+    })
+  }
+  stmt.free()
+  return results
 }
 
-export function deleteImage(id: number): boolean {
-  const images = loadImages()
-  const filtered = images.filter((img) => img.id !== id)
-  if (filtered.length === images.length) return false
-  saveImages(filtered)
+export function addImage(db: Database, image: Omit<Image, 'id'>): Image {
+  db.run(
+    'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+    [image.title, image.description, image.category, image.url, image.cdnLink, image.createdAt]
+  )
+  saveToStorage(db)
+
+  const lastId = db.exec('SELECT last_insert_rowid()')
+  const id = lastId[0].values[0][0] as number
+  return { ...image, id }
+}
+
+export function deleteImage(db: Database, id: number): boolean {
+  db.run('DELETE FROM images WHERE id = ?', [id])
+  saveToStorage(db)
   return true
 }

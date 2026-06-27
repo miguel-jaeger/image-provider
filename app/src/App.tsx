@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { NavBar } from './components/layout/NavBar'
 import { Footer } from './components/layout/Footer'
@@ -9,17 +9,33 @@ import { ImageGrid } from './components/dashboard/ImageGrid'
 import { Modal } from './components/modal/Modal'
 import { ImageUploadForm } from './components/modal/ImageUploadForm'
 import type { Image } from './types/image'
-import { getAllImages, getImagesByCategory, addImage, deleteImage } from './data/db'
+import type { Database } from 'sql.js'
+import { initDatabase, getAllImages, getImagesByCategory, addImage, deleteImage } from './data/db'
 import './App.css'
 
 function Dashboard() {
-  const [images, setImages] = useState<Image[]>(getAllImages)
+  const [images, setImages] = useState<Image[]>([])
   const [activeCategory, setActiveCategory] = useState('All Assets')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const dbRef = useRef<Database | null>(null)
+
+  useEffect(() => {
+    initDatabase().then((db) => {
+      dbRef.current = db
+      setImages(getAllImages(db))
+      setLoading(false)
+    }).catch((err) => {
+      console.error('Failed to init SQLite:', err)
+      setLoading(false)
+    })
+  }, [])
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category)
-    setImages(category === 'All Assets' ? getAllImages() : getImagesByCategory(category))
+    const db = dbRef.current
+    if (!db) return
+    setImages(category === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, category))
   }
 
   const handleAddImage = (imageData: {
@@ -29,14 +45,18 @@ function Dashboard() {
     url: string
     cdnLink: string
   }) => {
-    addImage({ ...imageData, createdAt: new Date().toISOString() })
-    setImages(activeCategory === 'All Assets' ? getAllImages() : getImagesByCategory(activeCategory))
+    const db = dbRef.current
+    if (!db) return
+    addImage(db, { ...imageData, createdAt: new Date().toISOString() })
+    setImages(activeCategory === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
     setIsModalOpen(false)
   }
 
   const handleDelete = (id: number) => {
-    deleteImage(id)
-    setImages(activeCategory === 'All Assets' ? getAllImages() : getImagesByCategory(activeCategory))
+    const db = dbRef.current
+    if (!db) return
+    deleteImage(db, id)
+    setImages(activeCategory === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
   }
 
   return (
@@ -45,15 +65,19 @@ function Dashboard() {
 
       <main className="pt-xxl pb-xxl px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto min-h-screen mt-16">
         <DashboardHeader />
-        <CategoryFilters
-          activeCategory={activeCategory}
-          onCategoryChange={handleCategoryChange}
-        />
-        <ImageGrid
-          images={images}
-          onDelete={handleDelete}
-          onAddNew={() => setIsModalOpen(true)}
-        />
+        {!loading && (
+          <>
+            <CategoryFilters
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+            />
+            <ImageGrid
+              images={images}
+              onDelete={handleDelete}
+              onAddNew={() => setIsModalOpen(true)}
+            />
+          </>
+        )}
       </main>
 
       <Footer />
