@@ -1,11 +1,10 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 interface NavBarProps {
   onRegisterClick: () => void
 }
 
 export function NavBar({ onRegisterClick }: NavBarProps) {
-  const location = useLocation()
 
  
   return (
