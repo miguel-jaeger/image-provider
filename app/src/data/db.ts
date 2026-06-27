@@ -1,4 +1,5 @@
-import initSqlJs, { Database } from 'sql.js'
+import initSqlJs from 'sql.js'
+import type { Database } from 'sql.js'
 import type { Image } from '../types/image'
 
 let db: Database | null = null
