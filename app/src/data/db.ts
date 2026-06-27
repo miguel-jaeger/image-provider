@@ -1,11 +1,10 @@
-import initSqlJs from 'sql.js'
-import type { Database } from 'sql.js'
 import type { Image } from '../types/image'
 
-let db: Database | null = null
+const STORAGE_KEY = 'image-provider-images'
 
-const SEED_DATA: Omit<Image, 'id'>[] = [
+const SEED_DATA: Image[] = [
   {
+    id: 1,
     title: 'Harbor Horizon',
     description: 'Ultra-modern minimalist office space featuring sustainable materials and ergonomic design elements for creative teams.',
     category: 'Architecture',
@@ -14,6 +13,7 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
     createdAt: new Date().toISOString()
   },
   {
+    id: 2,
     title: 'Summit Blue',
     description: 'Panoramic mountain range view captured at sunrise with atmospheric depth and natural color grading.',
     category: 'Nature',
@@ -22,6 +22,7 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
     createdAt: new Date().toISOString()
   },
   {
+    id: 3,
     title: 'Core Processing',
     description: 'Macro shot of a next-generation semiconductor with integrated neural processing units and light-pathways.',
     category: 'Technology',
@@ -30,6 +31,7 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
     createdAt: new Date().toISOString()
   },
   {
+    id: 4,
     title: 'Team Sync',
     description: 'Collaborative team workshop session in a modern daylight studio setting, highlighting creative synergy.',
     category: 'People',
@@ -38,6 +40,7 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
     createdAt: new Date().toISOString()
   },
   {
+    id: 5,
     title: 'Fluid Flow',
     description: 'Generative 3D fluid art representing dynamic data streams and algorithmic fluidity for digital interfaces.',
     category: 'Abstract',
@@ -47,133 +50,45 @@ const SEED_DATA: Omit<Image, 'id'>[] = [
   }
 ]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowsToImages(results: { columns: string[]; values: any[][] }): Image[] {
-  return results.values.map((row) => ({
-    id: row[0] as number,
-    title: row[1] as string,
-    description: row[2] as string,
-    category: row[3] as string,
-    url: row[4] as string,
-    cdnLink: row[5] as string,
-    createdAt: row[6] as string
-  }))
-}
-
-export async function initDatabase(): Promise<Database> {
-  if (db) return db
-
+function loadImages(): Image[] {
   try {
-    const SQL = await initSqlJs({
-      locateFile: (file) => `https://sql.js.org/dist/${file}`
-    })
-
-    const savedData = localStorage.getItem('image-provider-db')
-    if (savedData) {
-      const buf = new Uint8Array(JSON.parse(savedData))
-      db = new SQL.Database(buf)
-    } else {
-      db = new SQL.Database()
-      db.run(`
-        CREATE TABLE IF NOT EXISTS images (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          description TEXT,
-          category TEXT NOT NULL,
-          url TEXT NOT NULL,
-          cdnLink TEXT,
-          createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-      `)
-      for (const item of SEED_DATA) {
-        db.run(
-          'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-          [item.title, item.description, item.category, item.url, item.cdnLink, item.createdAt]
-        )
-      }
-      saveDatabase()
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
     }
-  } catch (error) {
-    console.error('Failed to initialize database:', error)
-    db = null
-  }
-
-  return db!
+  } catch { /* ignore */ }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DATA))
+  return SEED_DATA
 }
 
-function saveDatabase() {
-  if (!db) return
-  try {
-    const data = db.export()
-    const arr = Array.from(data)
-    localStorage.setItem('image-provider-db', JSON.stringify(arr))
-  } catch (error) {
-    console.error('Failed to save database:', error)
-  }
+function saveImages(images: Image[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(images))
 }
 
 export function getAllImages(): Image[] {
-  if (!db) return []
-  try {
-    const results = db.exec('SELECT * FROM images ORDER BY id DESC')
-    if (results.length === 0) return []
-    return rowsToImages(results[0])
-  } catch (error) {
-    console.error('Failed to get images:', error)
-    return []
-  }
+  return loadImages().sort((a, b) => b.id - a.id)
 }
 
 export function getImagesByCategory(category: string): Image[] {
-  if (!db) return []
-  try {
-    const stmt = db.prepare('SELECT * FROM images WHERE category = ? ORDER BY id DESC')
-    stmt.bind([category])
-    const results: Image[] = []
-    while (stmt.step()) {
-      const row = stmt.getAsObject()
-      results.push({
-        id: row.id as number,
-        title: row.title as string,
-        description: row.description as string,
-        category: row.category as string,
-        url: row.url as string,
-        cdnLink: row.cdnLink as string,
-        createdAt: row.createdAt as string
-      })
-    }
-    stmt.free()
-    return results
-  } catch (error) {
-    console.error('Failed to get images by category:', error)
-    return []
-  }
+  return loadImages()
+    .filter((img) => img.category === category)
+    .sort((a, b) => b.id - a.id)
 }
 
-export function addImage(image: Omit<Image, 'id'>): number {
-  if (!db) return 0
-  try {
-    db.run(
-      'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-      [image.title, image.description, image.category, image.url, image.cdnLink, image.createdAt]
-    )
-    saveDatabase()
-    const result = db.exec('SELECT last_insert_rowid()')
-    return result[0]?.values[0][0] as number
-  } catch (error) {
-    console.error('Failed to add image:', error)
-    return 0
-  }
+export function addImage(image: Omit<Image, 'id'>): Image {
+  const images = loadImages()
+  const newId = images.length > 0 ? Math.max(...images.map((i) => i.id)) + 1 : 1
+  const newImage: Image = { ...image, id: newId }
+  images.push(newImage)
+  saveImages(images)
+  return newImage
 }
 
 export function deleteImage(id: number): boolean {
-  if (!db) return false
-  try {
-    db.run('DELETE FROM images WHERE id = ?', [id])
-    saveDatabase()
-    return true
-  } catch (error) {
-    console.error('Failed to delete image:', error)
-    return false
-  }
+  const images = loadImages()
+  const filtered = images.filter((img) => img.id !== id)
+  if (filtered.length === images.length) return false
+  saveImages(filtered)
+  return true
 }
