@@ -4,16 +4,9 @@ import type { Image } from '../types/image'
 
 const DB_KEY = 'image-provider-sqlite'
 const CLOUD_NAME = 'dhecags26'
-const CLOUDINARY_API_KEY = '613315545548173'
-const CLOUDINARY_API_SECRET = 'L6hYcoM7haBVYgS4BAgEMAtyCVo'
+const UPLOAD_PRESET = 'Imagenes'
 
 let dbInstance: Database | null = null
-
-async function sha1(str: string): Promise<string> {
-  const buffer = new TextEncoder().encode(str)
-  const hash = await crypto.subtle.digest('SHA-1', buffer)
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
 
 const SEED_DATA: Omit<Image, 'id'>[] = [
   {
@@ -180,20 +173,13 @@ export async function deleteImage(db: Database, id: number): Promise<boolean> {
 
   if (publicId) {
     try {
-      const timestamp = Math.floor(Date.now() / 1000).toString()
-      const signature = await sha1(`public_id=${publicId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`)
-
-      const formData = new URLSearchParams()
-      formData.append('public_id', publicId)
-      formData.append('api_key', CLOUDINARY_API_KEY)
-      formData.append('timestamp', timestamp)
-      formData.append('signature', signature)
-      formData.append('invalidate', 'true')
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString()
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/delete_by_token`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          public_id: publicId,
+          upload_preset: UPLOAD_PRESET
+        })
       })
 
       const data = await res.json()
