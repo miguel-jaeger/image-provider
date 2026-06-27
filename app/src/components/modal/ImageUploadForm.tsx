@@ -46,7 +46,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-      <div className="p-xl overflow-y-auto flex-1 space-y-lg">
+      <div className="p-xl overflow-y-auto flex-1 flex flex-col gap-lg">
         {/* Image Upload Zone */}
         <div
           onClick={() => fileInputRef.current?.click()}

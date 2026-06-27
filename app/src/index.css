@@ -49,48 +49,37 @@
   --color-on-error-container: #93000a;
   --color-surface-container-lowest: #ffffff;
 
-  --font-headline-md: 'Inter', sans-serif;
-  --font-body-sm: 'Inter', sans-serif;
-  --font-headline-sm: 'Inter', sans-serif;
-  --font-label-md: 'Inter', sans-serif;
-  --font-body-lg: 'Inter', sans-serif;
-  --font-headline-lg: 'Inter', sans-serif;
   --font-display-md: 'Inter', sans-serif;
-  --font-display-lg: 'Inter', sans-serif;
+  --font-headline-md: 'Inter', sans-serif;
+  --font-headline-sm: 'Inter', sans-serif;
   --font-body-md: 'Inter', sans-serif;
-
-  --text-headline-md: 24px;
-  --text-body-sm: 14px;
-  --text-headline-sm: 20px;
-  --text-label-md: 12px;
-  --text-body-lg: 18px;
-  --text-headline-lg: 30px;
-  --text-display-md: 36px;
-  --text-display-lg: 48px;
-  --text-body-md: 16px;
-
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-base: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-xxl: 48px;
-  --spacing-gutter: 24px;
-  --spacing-margin-mobile: 16px;
-  --spacing-margin-desktop: 40px;
-
-  --radius-sm: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-full: 9999px;
-
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --font-body-sm: 'Inter', sans-serif;
+  --font-body-lg: 'Inter', sans-serif;
+  --font-label-md: 'Inter', sans-serif;
 }
 
 @layer base {
+  :root {
+    --size-display-md: 36px / 44px;
+    --size-headline-md: 24px / 32px;
+    --size-headline-sm: 20px / 28px;
+    --size-body-md: 16px / 24px;
+    --size-body-sm: 14px / 20px;
+    --size-body-lg: 18px / 28px;
+    --size-label-md: 12px / 16px;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-base: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+    --space-gutter: 24px;
+    --space-margin-mobile: 16px;
+    --space-margin-desktop: 40px;
+  }
+
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     display: inline-block;
@@ -139,3 +128,89 @@
     overflow: hidden;
   }
 }
+
+@utility p-xs { padding: var(--space-xs); }
+@utility p-sm { padding: var(--space-sm); }
+@utility p-base { padding: var(--space-base); }
+@utility p-md { padding: var(--space-md); }
+@utility p-lg { padding: var(--space-lg); }
+@utility p-xl { padding: var(--space-xl); }
+@utility p-xxl { padding: var(--space-xxl); }
+
+@utility px-xs { padding-inline: var(--space-xs); }
+@utility px-sm { padding-inline: var(--space-sm); }
+@utility px-md { padding-inline: var(--space-md); }
+@utility px-lg { padding-inline: var(--space-lg); }
+@utility px-xl { padding-inline: var(--space-xl); }
+@utility px-xxl { padding-inline: var(--space-xxl); }
+@utility px-margin-mobile { padding-inline: var(--space-margin-mobile); }
+@utility px-margin-desktop { padding-inline: var(--space-margin-desktop); }
+
+@utility py-xs { padding-block: var(--space-xs); }
+@utility py-sm { padding-block: var(--space-sm); }
+@utility py-md { padding-block: var(--space-md); }
+@utility py-lg { padding-block: var(--space-lg); }
+@utility py-xl { padding-block: var(--space-xl); }
+@utility py-xxl { padding-block: var(--space-xxl); }
+
+@utility pt-xxl { padding-top: var(--space-xxl); }
+@utility pb-xxl { padding-bottom: var(--space-xxl); }
+
+@utility mx-xs { margin-inline: var(--space-xs); }
+@utility mx-sm { margin-inline: var(--space-sm); }
+@utility mx-md { margin-inline: var(--space-md); }
+@utility mx-lg { margin-inline: var(--space-lg); }
+@utility mx-xl { margin-inline: var(--space-xl); }
+
+@utility my-xs { margin-block: var(--space-xs); }
+@utility my-sm { margin-block: var(--space-sm); }
+@utility my-md { margin-block: var(--space-md); }
+@utility my-lg { margin-block: var(--space-lg); }
+@utility my-xl { margin-block: var(--space-xl); }
+
+@utility mt-base { margin-top: var(--space-base); }
+@utility mt-sm { margin-top: var(--space-sm); }
+@utility mt-md { margin-top: var(--space-md); }
+@utility mt-lg { margin-top: var(--space-lg); }
+@utility mt-xl { margin-top: var(--space-xl); }
+@utility mt-xxl { margin-top: var(--space-xxl); }
+
+@utility mb-xs { margin-bottom: var(--space-xs); }
+@utility mb-sm { margin-bottom: var(--space-sm); }
+@utility mb-md { margin-bottom: var(--space-md); }
+@utility mb-lg { margin-bottom: var(--space-lg); }
+@utility mb-xl { margin-bottom: var(--space-xl); }
+@utility mb-xxl { margin-bottom: var(--space-xxl); }
+
+@utility ml-auto { margin-left: auto; }
+
+@utility gap-xs { gap: var(--space-xs); }
+@utility gap-sm { gap: var(--space-sm); }
+@utility gap-base { gap: var(--space-base); }
+@utility gap-md { gap: var(--space-md); }
+@utility gap-lg { gap: var(--space-lg); }
+@utility gap-xl { gap: var(--space-xl); }
+@utility gap-xxl { gap: var(--space-xxl); }
+@utility gap-gutter { gap: var(--space-gutter); }
+
+@utility font-display-md { font-family: var(--font-display-md); }
+@utility font-headline-md { font-family: var(--font-headline-md); }
+@utility font-headline-sm { font-family: var(--font-headline-sm); }
+@utility font-body-md { font-family: var(--font-body-md); }
+@utility font-body-sm { font-family: var(--font-body-sm); }
+@utility font-body-lg { font-family: var(--font-body-lg); }
+@utility font-label-md { font-family: var(--font-label-md); }
+
+@utility text-display-md { font-size: 36px; line-height: 44px; letter-spacing: -0.02em; font-weight: 700; }
+@utility text-headline-md { font-size: 24px; line-height: 32px; letter-spacing: -0.01em; font-weight: 600; }
+@utility text-headline-sm { font-size: 20px; line-height: 28px; letter-spacing: -0.01em; font-weight: 600; }
+@utility text-body-md { font-size: 16px; line-height: 24px; font-weight: 400; }
+@utility text-body-sm { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility text-body-lg { font-size: 18px; line-height: 28px; font-weight: 400; }
+@utility text-label-md { font-size: 12px; line-height: 16px; letter-spacing: 0.01em; font-weight: 500; }
+
+@utility rounded-xs { border-radius: 0.25rem; }
+@utility rounded-sm { border-radius: 0.25rem; }
+@utility rounded-lg { border-radius: 0.5rem; }
+@utility rounded-xl { border-radius: 0.75rem; }
+@utility rounded-full { border-radius: 9999px; }
