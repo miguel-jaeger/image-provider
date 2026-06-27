@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { NavBar } from './components/layout/NavBar'
 import { Footer } from './components/layout/Footer'
@@ -9,6 +9,7 @@ import { ImageGrid } from './components/dashboard/ImageGrid'
 import { Modal } from './components/modal/Modal'
 import { ImageUploadForm } from './components/modal/ImageUploadForm'
 import type { Image } from './types/image'
+import type { Database } from 'sql.js'
 import './App.css'
 
 const FALLBACK_IMAGES: Image[] = [
@@ -59,18 +60,60 @@ const FALLBACK_IMAGES: Image[] = [
   }
 ]
 
+function readAllImagesFromDb(database: Database): Image[] {
+  try {
+    const results = database.exec('SELECT * FROM images ORDER BY id DESC')
+    if (results.length === 0) return []
+    return results[0].values.map((row) => ({
+      id: row[0] as number,
+      title: row[1] as string,
+      description: row[2] as string,
+      category: row[3] as string,
+      url: row[4] as string,
+      cdnLink: row[5] as string,
+      createdAt: row[6] as string
+    }))
+  } catch {
+    return []
+  }
+}
+
+function readImagesByCategoryFromDb(database: Database, category: string): Image[] {
+  try {
+    const stmt = database.prepare('SELECT * FROM images WHERE category = ? ORDER BY id DESC')
+    stmt.bind([category])
+    const results: Image[] = []
+    while (stmt.step()) {
+      const row = stmt.getAsObject()
+      results.push({
+        id: row.id as number,
+        title: row.title as string,
+        description: row.description as string,
+        category: row.category as string,
+        url: row.url as string,
+        cdnLink: row.cdnLink as string,
+        createdAt: row.createdAt as string
+      })
+    }
+    stmt.free()
+    return results
+  } catch {
+    return []
+  }
+}
+
 function Dashboard() {
   const [images, setImages] = useState<Image[]>(FALLBACK_IMAGES)
   const [activeCategory, setActiveCategory] = useState('All Assets')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [dbModule, setDbModule] = useState<typeof import('./data/db') | null>(null)
+  const dbRef = useRef<Database | null>(null)
 
   useEffect(() => {
     import('./data/db')
-      .then((mod) => mod.initDatabase().then(() => mod))
-      .then((mod) => {
-        setDbModule(mod)
-        const allImages = mod.getAllImages()
+      .then((mod) => mod.initDatabase())
+      .then((database) => {
+        dbRef.current = database
+        const allImages = readAllImagesFromDb(database)
         if (allImages.length > 0) setImages(allImages)
       })
       .catch((err) => {
@@ -78,33 +121,47 @@ function Dashboard() {
       })
   }, [])
 
-  const loadImages = useCallback(() => {
-    if (!dbModule) return
-    try {
-      if (activeCategory === 'All Assets') {
-        const allImages = dbModule.getAllImages()
-        if (allImages.length > 0) setImages(allImages)
-      } else {
-        const filtered = dbModule.getImagesByCategory(activeCategory)
-        if (filtered.length > 0) {
-          setImages(filtered)
-        } else {
-          setImages(FALLBACK_IMAGES.filter((img) => img.category === activeCategory))
-        }
-      }
-    } catch {
-      // keep current images
-    }
-  }, [activeCategory, dbModule])
-
   useEffect(() => {
-    loadImages()
-  }, [loadImages])
+    const database = dbRef.current
+    if (!database) return
+
+    if (activeCategory === 'All Assets') {
+      const allImages = readAllImagesFromDb(database)
+      if (allImages.length > 0) setImages(allImages)
+    } else {
+      const filtered = readImagesByCategoryFromDb(database, activeCategory)
+      if (filtered.length > 0) {
+        setImages(filtered)
+      } else {
+        setImages(FALLBACK_IMAGES.filter((img) => img.category === activeCategory))
+      }
+    }
+  }, [activeCategory])
+
+  const refreshFromDb = () => {
+    const database = dbRef.current
+    if (!database) return
+
+    if (activeCategory === 'All Assets') {
+      const allImages = readAllImagesFromDb(database)
+      setImages(allImages.length > 0 ? allImages : FALLBACK_IMAGES)
+    } else {
+      const filtered = readImagesByCategoryFromDb(database, activeCategory)
+      setImages(filtered.length > 0 ? filtered : FALLBACK_IMAGES.filter((img) => img.category === activeCategory))
+    }
+  }
 
   const handleDelete = (id: number) => {
-    if (dbModule) {
-      dbModule.deleteImage(id)
-      loadImages()
+    const database = dbRef.current
+    if (database) {
+      try {
+        database.run('DELETE FROM images WHERE id = ?', [id])
+        const data = database.export()
+        localStorage.setItem('image-provider-db', JSON.stringify(Array.from(data)))
+      } catch (err) {
+        console.error('Failed to delete:', err)
+      }
+      refreshFromDb()
     } else {
       setImages((prev) => prev.filter((img) => img.id !== id))
     }
@@ -117,18 +174,29 @@ function Dashboard() {
     url: string
     cdnLink: string
   }) => {
-    const newImage: Image = {
-      ...imageData,
-      id: Date.now(),
-      createdAt: new Date().toISOString()
-    }
+    const database = dbRef.current
 
-    if (dbModule) {
-      dbModule.addImage(newImage)
-      loadImages()
+    if (database) {
+      try {
+        database.run(
+          'INSERT INTO images (title, description, category, url, cdnLink, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+          [imageData.title, imageData.description, imageData.category, imageData.url, imageData.cdnLink, new Date().toISOString()]
+        )
+        const data = database.export()
+        localStorage.setItem('image-provider-db', JSON.stringify(Array.from(data)))
+      } catch (err) {
+        console.error('Failed to insert image:', err)
+      }
+      refreshFromDb()
     } else {
+      const newImage: Image = {
+        ...imageData,
+        id: Date.now(),
+        createdAt: new Date().toISOString()
+      }
       setImages((prev) => [newImage, ...prev])
     }
+
     setIsModalOpen(false)
   }
 
