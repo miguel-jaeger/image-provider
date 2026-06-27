@@ -7,11 +7,7 @@ interface NavBarProps {
 export function NavBar({ onRegisterClick }: NavBarProps) {
   const location = useLocation()
 
-  const navLinks = [
-    { to: '/', label: 'Dashboard' },
-    { to: '/library', label: 'Library' },
-    { to: '/analytics', label: 'Analytics' }
-  ]
+
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-surface/80 glass-nav shadow-sm">
@@ -22,21 +18,7 @@ export function NavBar({ onRegisterClick }: NavBarProps) {
           </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-xl">
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`font-body-md transition-colors ${
-                location.pathname === link.to
-                  ? 'text-primary border-b-2 border-primary pb-1'
-                  : 'text-on-surface-variant hover:text-primary'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+        
 
         <button
           onClick={onRegisterClick}
