@@ -75,7 +75,6 @@ function Dashboard() {
             <ImageGrid
               images={images}
               onDelete={handleDelete}
-              onAddNew={() => setIsModalOpen(true)}
             />
           </>
         )}
