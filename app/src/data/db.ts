@@ -174,7 +174,7 @@ export async function deleteImage(db: Database, id: number): Promise<boolean> {
   if (publicId) {
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/delete_by_token`, {
-        method: 'DELETE',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           public_id: publicId,
