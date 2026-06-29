@@ -96,6 +96,7 @@ function Dashboard() {
         title="Registrar nueva imagen"
       >
         <ImageUploadForm
+          key={isModalOpen ? 'open' : 'closed'}
           onSubmit={handleAddImage}
           onCancel={() => setIsModalOpen(false)}
         />

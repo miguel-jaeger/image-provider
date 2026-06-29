@@ -113,7 +113,7 @@ export function addImage(db: Database, image: Omit<Image, 'id'>): Image {
 
 export async function deleteImage(db: Database, id: number): Promise<boolean> {
   const stmtDel = db.prepare(`SELECT publicId, deleteToken FROM images WHERE id = ?`)
-  stmtDel.run([id])
+  stmtDel.bind([id])
   let publicId = ''
   let deleteToken = ''
   if (stmtDel.step()) {
