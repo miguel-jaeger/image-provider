@@ -45,6 +45,7 @@ function Dashboard() {
     url: string
     cdnLink: string
     publicId: string
+    deleteToken: string
   }) => {
     const db = dbRef.current
     if (!db) return

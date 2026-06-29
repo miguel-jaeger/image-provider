@@ -34,7 +34,7 @@ export function ImageCard({ image, onDelete }: ImageCardProps) {
           </p>
           <a
             className="font-label-md text-primary flex items-center gap-xs truncate hover:underline"
-            href={`https://${image.cdnLink}`}
+            href={image.cdnLink}
             target="_blank"
             rel="noopener noreferrer"
           >

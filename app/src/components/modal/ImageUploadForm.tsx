@@ -9,6 +9,7 @@ interface ImageUploadFormProps {
     url: string
     cdnLink: string
     publicId: string
+    deleteToken: string
   }) => void
   onCancel: () => void
 }
@@ -57,13 +58,17 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
       )
 
       if (response.data && response.data.secure_url) {
+        const rawUrl: string = response.data.secure_url
+        const url = rawUrl.replace(/^(https?:)?\/\//, 'https://')
+
         onSubmit({
           title,
           description,
           category,
-          url: response.data.secure_url,
-          cdnLink: response.data.secure_url,
-          publicId: response.data.public_id || ''
+          url,
+          cdnLink: url,
+          publicId: response.data.public_id || '',
+          deleteToken: ''
         })
       } else {
         setStatus('error')
