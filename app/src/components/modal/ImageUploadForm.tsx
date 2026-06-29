@@ -3,6 +3,7 @@ import axios from 'axios'
 
 interface ImageUploadFormProps {
   onSubmit: (image: {
+    id: number
     title: string
     description: string
     category: string
@@ -62,13 +63,14 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
         const url = rawUrl.replace(/^(https?:)?\/\//, 'https://')
 
         onSubmit({
+          id: Date.now(),
           title,
           description,
           category,
           url,
           cdnLink: url,
           publicId: response.data.public_id || '',
-          deleteToken: ''
+          deleteToken: response.data.delete_token || ''
         })
       } else {
         setStatus('error')
