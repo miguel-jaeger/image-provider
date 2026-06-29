@@ -164,10 +164,11 @@ export function getImagesByCategory(db: Database, category: string): Image[] {
 }
 
 export function addImage(db: Database, image: Omit<Image, 'id'>): Image {
-  db.run(
-    'INSERT INTO images (title, description, category, url, cdnLink, publicId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [image.title, image.description, image.category, image.url, image.cdnLink, image.publicId || '', image.createdAt]
+  const stmt = db.prepare(
+    'INSERT INTO images (title, description, category, url, cdnLink, publicId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'
   )
+  stmt.run([image.title, image.description, image.category, image.url, image.cdnLink, image.publicId || '', image.createdAt])
+  stmt.free()
   saveToStorage(db)
 
   const lastId = db.exec('SELECT last_insert_rowid()')
@@ -176,10 +177,18 @@ export function addImage(db: Database, image: Omit<Image, 'id'>): Image {
 }
 
 export async function deleteImage(db: Database, id: number): Promise<boolean> {
-  const row = db.exec(`SELECT publicId FROM images WHERE id = ${id}`)
-  const publicId = row.length > 0 ? (row[0].values[0][0] as string) : ''
+  const stmtDel = db.prepare(`SELECT publicId FROM images WHERE id = ?`)
+  stmtDel.run([id])
+  let publicId = ''
+  if (stmtDel.step()) {
+    const obj = stmtDel.getAsObject()
+    publicId = (obj.publicId as string) || ''
+  }
+  stmtDel.free()
 
-  db.run('DELETE FROM images WHERE id = ?', [id])
+  const stmt = db.prepare('DELETE FROM images WHERE id = ?')
+  stmt.run([id])
+  stmt.free()
   saveToStorage(db)
 
   if (publicId) {
