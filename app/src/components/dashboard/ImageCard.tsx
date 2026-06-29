@@ -46,15 +46,15 @@ export function ImageCard({ image, onDelete }: ImageCardProps) {
             className="delete-btn mt-base w-full py-sm bg-error-container text-on-error-container rounded-lg font-label-md flex items-center justify-center gap-xs hover:bg-error hover:text-on-error transition-all"
           >
             <span className="material-symbols-outlined text-[18px]">delete</span>
-            Delete Asset
+            Eliminar
           </button>
         </div>
       </div>
 
       <ConfirmationModal
         isOpen={showConfirm}
-        title="Delete Image"
-        message={`Are you sure you want to delete "${image.title}"? This will also remove it from Cloudinary.`}
+        title="Eliminar imagen"
+        message={`¿Estás seguro de que deseas eliminar "${image.title}"? Esto también la eliminará de Cloudinary.`}
         onConfirm={() => {
           setShowConfirm(false)
           onDelete(image.id)

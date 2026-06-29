@@ -23,7 +23,7 @@ export function NavBar({ onRegisterClick }: NavBarProps) {
           className="bg-primary-container text-on-primary-container px-lg py-sm rounded-lg font-label-md flex items-center gap-xs hover:bg-primary/90 transition-all active:scale-95"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
-          Register New Image
+          Registrar imagen
         </button>
       </div>
     </nav>

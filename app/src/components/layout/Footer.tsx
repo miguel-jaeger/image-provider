@@ -7,18 +7,18 @@ export function Footer() {
             Image Provider
           </span>
           <p className="font-body-sm text-body-sm text-on-surface-variant opacity-70">
-            &copy; 2024 Image Provider. All rights reserved.
+            &copy; 2024 Image Provider. Todos los derechos reservados.
           </p>
         </div>
         <div className="flex gap-lg items-center">
           <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all hover:underline" href="#">
-            Terms
+            Términos
           </a>
           <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all hover:underline" href="#">
-            Privacy
+            Privacidad
           </a>
           <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all hover:underline" href="#">
-            Support
+            Soporte
           </a>
           <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-all hover:underline" href="#">
             API
