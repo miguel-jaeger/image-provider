@@ -68,7 +68,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
           url,
           cdnLink: url,
           publicId: response.data.public_id || '',
-          deleteToken: ''
+          deleteToken: response.data.delete_token || ''
         })
       } else {
         setStatus('error')
