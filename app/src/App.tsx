@@ -39,6 +39,7 @@ function Dashboard() {
   }
 
   const handleAddImage = (imageData: {
+    id: number
     title: string
     description: string
     category: string
@@ -48,9 +49,17 @@ function Dashboard() {
     deleteToken: string
   }) => {
     const db = dbRef.current
-    if (!db) return
-    addImage(db, { ...imageData, createdAt: new Date().toISOString() })
-    setImages(activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
+    if (!db) {
+      console.warn('Database not initialized. Image not persisted locally.')
+      setIsModalOpen(false)
+      return
+    }
+    const { id: _clientId, ...dataWithoutId } = imageData
+    const added = addImage(db, { ...dataWithoutId, createdAt: new Date().toISOString() })
+    console.log('Image added:', added)
+    const newImages = activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory)
+    console.log('All images:', newImages)
+    setImages(newImages)
     setIsModalOpen(false)
   }
 
@@ -91,6 +100,7 @@ function Dashboard() {
         title="Registrar nueva imagen"
       >
         <ImageUploadForm
+          key={isModalOpen ? 'open' : 'closed'}
           onSubmit={handleAddImage}
           onCancel={() => setIsModalOpen(false)}
         />
