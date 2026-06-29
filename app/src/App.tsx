@@ -39,6 +39,7 @@ function Dashboard() {
   }
 
   const handleAddImage = (imageData: {
+    id: number
     title: string
     description: string
     category: string
@@ -48,14 +49,17 @@ function Dashboard() {
     deleteToken: string
   }) => {
     const db = dbRef.current
-    // Ensure the modal always closes, even if the DB failed to init
     if (!db) {
       console.warn('Database not initialized. Image not persisted locally.')
       setIsModalOpen(false)
       return
     }
-    addImage(db, { ...imageData, createdAt: new Date().toISOString() })
-    setImages(activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
+    const { id: _clientId, ...dataWithoutId } = imageData
+    const added = addImage(db, { ...dataWithoutId, createdAt: new Date().toISOString() })
+    console.log('Image added:', added)
+    const newImages = activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory)
+    console.log('All images:', newImages)
+    setImages(newImages)
     setIsModalOpen(false)
   }
 

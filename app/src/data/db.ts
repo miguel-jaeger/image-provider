@@ -7,7 +7,6 @@ const CLOUD_NAME = 'dhecags26'
 
 let dbInstance: Database | null = null
 
-
 function createTable(db: Database) {
   db.run(`CREATE TABLE IF NOT EXISTS images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +39,6 @@ function migrateTable(db: Database) {
   }
 }
 
-
 function saveToStorage(db: Database) {
   const data = db.export()
   localStorage.setItem(DB_KEY, JSON.stringify(Array.from(data)))
@@ -64,8 +62,6 @@ export async function initDatabase(): Promise<Database> {
 
   return dbInstance
 }
-
-
 
 function rowToImage(row: (string | number | Uint8Array | null)[]): Image {
   return {
@@ -135,7 +131,6 @@ export async function deleteImage(db: Database, id: number): Promise<boolean> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: deleteToken })
       })
-
       const data = await res.json()
       if (data.result === 'ok') {
         console.log('Cloudinary image deleted:', publicId)
