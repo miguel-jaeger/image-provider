@@ -23,13 +23,13 @@ export function ConfirmationModal({ isOpen, title, message, onConfirm, onCancel 
             onClick={onCancel}
             className="px-lg py-sm rounded-lg text-on-surface font-label-md hover:bg-surface-container-highest transition-all active:scale-95"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={onConfirm}
             className="px-lg py-sm rounded-lg bg-error text-on-error font-label-md hover:shadow-lg hover:shadow-error/20 transition-all active:scale-95"
           >
-            Delete
+            Eliminar
           </button>
         </div>
       </div>

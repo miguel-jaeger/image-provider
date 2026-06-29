@@ -3,7 +3,7 @@ interface CategoryFiltersProps {
   onCategoryChange: (category: string) => void
 }
 
-const categories = ['All Assets', 'Nature', 'Architecture', 'Technology', 'People']
+const categories = ['Todos', 'Naturaleza', 'Arquitectura', 'Tecnología', 'Personas']
 
 export function CategoryFilters({ activeCategory, onCategoryChange }: CategoryFiltersProps) {
   return (
@@ -21,10 +21,7 @@ export function CategoryFilters({ activeCategory, onCategoryChange }: CategoryFi
           {category}
         </button>
       ))}
-      <button className="ml-auto flex items-center gap-xs text-on-surface-variant font-label-md hover:text-primary transition-colors">
-        <span className="material-symbols-outlined text-[20px]">filter_list</span>
-        Filter Settings
-      </button>
+     
     </section>
   )
 }

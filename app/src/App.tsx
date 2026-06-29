@@ -15,7 +15,7 @@ import './App.css'
 
 function Dashboard() {
   const [images, setImages] = useState<Image[]>([])
-  const [activeCategory, setActiveCategory] = useState('All Assets')
+  const [activeCategory, setActiveCategory] = useState('Todos')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const dbRef = useRef<Database | null>(null)
@@ -35,7 +35,7 @@ function Dashboard() {
     setActiveCategory(category)
     const db = dbRef.current
     if (!db) return
-    setImages(category === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, category))
+    setImages(category === 'Todos' ? getAllImages(db) : getImagesByCategory(db, category))
   }
 
   const handleAddImage = (imageData: {
@@ -45,11 +45,12 @@ function Dashboard() {
     url: string
     cdnLink: string
     publicId: string
+    deleteToken: string
   }) => {
     const db = dbRef.current
     if (!db) return
     addImage(db, { ...imageData, createdAt: new Date().toISOString() })
-    setImages(activeCategory === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
+    setImages(activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
     setIsModalOpen(false)
   }
 
@@ -57,7 +58,7 @@ function Dashboard() {
     const db = dbRef.current
     if (!db) return
     await deleteImage(db, id)
-    setImages(activeCategory === 'All Assets' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
+    setImages(activeCategory === 'Todos' ? getAllImages(db) : getImagesByCategory(db, activeCategory))
   }
 
   return (
@@ -87,7 +88,7 @@ function Dashboard() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Register New Image"
+        title="Registrar nueva imagen"
       >
         <ImageUploadForm
           onSubmit={handleAddImage}
@@ -101,7 +102,7 @@ function Dashboard() {
 function Library() {
   return (
     <div className="min-h-screen bg-background text-on-surface flex items-center justify-center">
-      <h1 className="text-display-md font-display-md text-on-surface">Library - Coming Soon</h1>
+      <h1 className="text-display-md font-display-md text-on-surface">Biblioteca - Próximamente</h1>
     </div>
   )
 }
@@ -109,7 +110,7 @@ function Library() {
 function Analytics() {
   return (
     <div className="min-h-screen bg-background text-on-surface flex items-center justify-center">
-      <h1 className="text-display-md font-display-md text-on-surface">Analytics - Coming Soon</h1>
+      <h1 className="text-display-md font-display-md text-on-surface">Analíticas - Próximamente</h1>
     </div>
   )
 }

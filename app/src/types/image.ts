@@ -6,5 +6,6 @@ export interface Image {
   url: string
   cdnLink: string
   publicId: string
+  deleteToken: string
   createdAt: string
 }

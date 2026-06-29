@@ -9,11 +9,12 @@ interface ImageUploadFormProps {
     url: string
     cdnLink: string
     publicId: string
+    deleteToken: string
   }) => void
   onCancel: () => void
 }
 
-const categories = ['Nature', 'Technology', 'Architecture', 'People', 'Abstract']
+const categories = ['Naturaleza', 'Tecnología', 'Arquitectura', 'Personas', 'Abstracto']
 
 const CLOUD_NAME = 'dhecags26'
 const UPLOAD_PRESET = 'preset_react'
@@ -57,13 +58,17 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
       )
 
       if (response.data && response.data.secure_url) {
+        const rawUrl: string = response.data.secure_url
+        const url = rawUrl.replace(/^(https?:)?\/\//, 'https://')
+
         onSubmit({
           title,
           description,
           category,
-          url: response.data.secure_url,
-          cdnLink: response.data.secure_url,
-          publicId: response.data.public_id || ''
+          url,
+          cdnLink: url,
+          publicId: response.data.public_id || '',
+          deleteToken: ''
         })
       } else {
         setStatus('error')
@@ -89,7 +94,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
           {preview ? (
             <img
               src={preview}
-              alt="Preview"
+              alt="Vista previa"
               className="max-h-48 mx-auto rounded-lg object-cover"
             />
           ) : (
@@ -98,10 +103,10 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
                 cloud_upload
               </span>
               <div className="font-headline-sm text-headline-sm mb-xs">
-                Choose File
+                Seleccionar archivo
               </div>
               <p className="text-on-surface-variant text-body-sm">
-                High-resolution JPG, PNG or TIFF up to 25MB
+                Imágenes JPG, PNG o TIFF de alta resolución de hasta 25MB
               </p>
             </>
           )}
@@ -117,21 +122,21 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
         {/* Title Field */}
         <div>
           <label className="block text-on-surface font-label-md mb-xs">
-            Title
+            Título
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md text-on-surface"
-            placeholder="e.g. Minimalist Urban Architecture"
+            placeholder="ej. Arquitectura Urbana Minimalista"
           />
         </div>
 
         {/* Category Dropdown */}
         <div>
           <label className="block text-on-surface font-label-md mb-xs">
-            Category
+            Categoría
           </label>
           <div className="relative">
             <select
@@ -139,7 +144,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md text-on-surface"
             >
-              <option value="">Select a category</option>
+              <option value="">Selecciona una categoría</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -155,13 +160,13 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
         {/* Description Field */}
         <div>
           <label className="block text-on-surface font-label-md mb-xs">
-            Description
+            Descripción
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-md text-on-surface resize-none"
-            placeholder="Provide a detailed description of the image content and lighting..."
+            placeholder="Proporciona una descripción detallada del contenido e iluminación de la imagen..."
             rows={4}
           />
         </div>
@@ -182,7 +187,7 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
           disabled={status === 'uploading'}
           className="px-lg py-sm rounded-lg text-on-surface font-label-md hover:bg-surface-container-high transition-all active:scale-95 disabled:opacity-50"
         >
-          Cancel
+          Cancelar
         </button>
         <button
           type="submit"
@@ -192,10 +197,10 @@ export function ImageUploadForm({ onSubmit, onCancel }: ImageUploadFormProps) {
           {status === 'uploading' ? (
             <>
               <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
-              Uploading...
+              Subiendo...
             </>
           ) : (
-            'Save Image'
+            'Guardar imagen'
           )}
         </button>
       </div>
