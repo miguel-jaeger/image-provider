@@ -34,7 +34,6 @@
     "https-proxy-agent": "^5.0.1",
     "jiti": "^2.7.0",
     "lightningcss": "^1.32.0",
-    "lightningcss-win32-x64-msvc": "^1.32.0",
     "lucide-react": "^1.21.0",
     "magic-string": "^0.30.21",
     "math-intrinsics": "^1.1.0",
